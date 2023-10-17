@@ -12,8 +12,7 @@ FONT_NAME = "Courier"
 WORK_MIN = 25
 SHORT_BREAK_MIN = 5
 LONG_BREAK_MIN = 20
-reps = 0
-timer = None
+
 # ---------------------------- SOUND EFFECT ------------------------------- #
 mixer.init()
 notification = mixer.Sound(f"./audio/ding-sound-effect.mp3")
@@ -23,6 +22,8 @@ rain_sound_effect = mixer.Sound(f"./audio/soft-rain-sound-effect.mp3")
 class Pomodoro: 
     def __init__(self):
         self.mp3_sound_effect = None
+        self.reps = 0
+        self.timer = None
 
     # ---------------------------- TIMER RESET ------------------------------- # 
     def timer_reset(self):
@@ -31,19 +32,20 @@ class Pomodoro:
         self.timer_label.config(text="Timer", foreground=GREEN)
         self.check_marks.config(text="")
         self.reps = 0  # Use self.reps to access the class attribute
+        rain_sound_effect.stop()
+        self.mp3_sound_effect.stop()
     # ---------------------------- TIMER MECHANISM ------------------------------- # 
     def start_timer(self):
-        global reps
-        reps += 1
+        self.reps += 1
         work_sec = WORK_MIN * 60
         short_break_sec = SHORT_BREAK_MIN * 60
         long_break_sec = LONG_BREAK_MIN * 60
         # if it's the last rep
-        if reps % 8 == 0:
+        if self.reps % 8 == 0:
             self.count_down(long_break_sec)
             self.timer_label.config(text="Break", foreground=RED)
         # if it's the 2nd, 4th, 6th rep:
-        elif reps % 2 == 0:
+        elif self.reps % 2 == 0:
             self.music_play()
             self.count_down(short_break_sec)
             self.timer_label.config(text="Break", foreground=PINK)
@@ -58,7 +60,7 @@ class Pomodoro:
             self.mp3_sound_effect.stop()  # Stop the previously playing sound effect
         mp3_file = random.choice(os.listdir('./audio/break_time_music'))
         self.mp3_sound_effect = mixer.Sound(f"./audio/break_time_music/{mp3_file}")
-        if reps % 2 == 1:
+        if self.reps % 2 == 1:
             rain_sound_effect.play(-1)
         else:
             rain_sound_effect.stop()
@@ -72,12 +74,12 @@ class Pomodoro:
             count_sec = f"0{count_sec}" #'%02d' % count_sec
         self.canvas.itemconfig(self.timer_text, text=f"{count_min}:{count_sec}")
         if count > 0:
-            self.timer = self.window.after(10, self.count_down, count - 1)
+            self.timer = self.window.after(1000, self.count_down, count - 1)
         else:
             self.start_timer()
             notification.play()
             marks = ""
-            work_session = math.floor(reps/2)
+            work_session = math.floor(self.reps/2)
             for _ in range(work_session):
                 marks += "✔"
                 self.check_marks.config(text=marks)
